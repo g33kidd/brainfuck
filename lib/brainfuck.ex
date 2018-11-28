@@ -45,6 +45,8 @@ defmodule Brainfuck do
       |> IO.puts()
   end
 
+  def brainfuck(_list, nil), do: IO.puts("Not sure what's wrong")
+
   def brainfuck([], {_cell, _storage, output}), do: IO.puts(output)
 
   def brainfuck([h | t], {cell, storage, output} = state) do
@@ -84,27 +86,34 @@ defmodule Brainfuck do
   def do_loop([h | t] = list, {cell, storage, output}) when is_list(list) do
     {_c, v} = storage |> Enum.at(cell)
 
-    if v != 0 do
-      IO.puts("continue")
-      {c, s, o} = code(h, {cell, storage, output})
+    state =
+      case v do
+        0 ->
+          {cell, storage, output}
 
-      do_loop(t, {c, s, o})
-    end
+        _ ->
+          {c, s, o} = code(h, {cell, storage, output})
+          do_loop(t, {c, s, o})
+      end
 
-    if v == 0, do: {cell, storage, output}
+    state
   end
 
   def do_loop(command, {cell, storage, output}) when is_bitstring(command) do
     {_c, v} = storage |> Enum.at(cell)
 
-    if v != 0 do
-      IO.puts("continue")
-      {c, s, o} = code(command, {cell, storage, output})
+    state =
+      case v do
+        0 ->
+          {cell, storage, output}
 
-      do_loop(command, {c, s, o})
-    end
+        _ ->
+          {c, s, o} = code(command, {cell, storage, output})
 
-    if v == 0, do: {cell, storage, output}
+          do_loop(command, {c, s, o})
+      end
+
+    state
   end
 
   # def handle_loop(code, {cell, storage, output}) do
@@ -175,6 +184,8 @@ defmodule Brainfuck do
     debug(:byte_decrement, state)
     state
   end
+
+  defp get_loop([], acc), do: {:ok, acc}
 
   defp get_loop([h | t], acc \\ []) do
     if h == "]" do
@@ -250,33 +261,33 @@ end
 # .------.--------.[-]>++++++++[<++++>- ]<+.[-]++++++++++.
 # """)
 
-# Brainfuck.fuck("""
-# 0 20
-# $
-# +++++ +++++             initialize counter (cell #0) to 10
-# [                       use loop to set the next four cells to 70/100/30/10
-#     > +++++ ++              add  7 to cell #1
-#     > +++++ +++++           add 10 to cell #2
-#     > +++                   add  3 to cell #3
-#     > +                     add  1 to cell #4
-#     <<<< -                  decrement counter (cell #0)
-# ]
-# > ++ .                  print 'H'
-# > + .                   print 'e'
-# +++++ ++ .              print 'l'
-# .                       print 'l'
-# +++ .                   print 'o'
-# > ++ .                  print ' '
-# << +++++ +++++ +++++ .  print 'W'
-# > .                     print 'o'
-# +++ .                   print 'r'
-# ----- - .               print 'l'
-# ----- --- .             print 'd'
-# > + .                   print '!'
-# """)
-
 Brainfuck.fuck("""
 0 20
 $
-+++++[-]
++++++ +++++             initialize counter (cell #0) to 10
+[                       use loop to set the next four cells to 70/100/30/10
+    > +++++ ++              add  7 to cell #1
+    > +++++ +++++           add 10 to cell #2
+    > +++                   add  3 to cell #3
+    > +                     add  1 to cell #4
+    <<<< -                  decrement counter (cell #0)
+]
+> ++ .                  print 'H'
+> + .                   print 'e'
++++++ ++ .              print 'l'
+.                       print 'l'
++++ .                   print 'o'
+> ++ .                  print ' '
+<< +++++ +++++ +++++ .  print 'W'
+> .                     print 'o'
++++ .                   print 'r'
+----- - .               print 'l'
+----- --- .             print 'd'
+> + .                   print '!'
 """)
+
+# Brainfuck.fuck("""
+# 0 20
+# $
+# +++++[-]
+# """)
